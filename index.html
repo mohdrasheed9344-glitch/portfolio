@@ -4,90 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Photography Universe | Capture</title>
-    
-    <style>
-        /*
-        * REMOVE MOBILE WARNING OVERLAY
-        * This CSS block ensures the mobile warning is hidden,
-        * allowing the Three.js canvas to be visible on small screens.
-        */
-        .mobile-warning {
-            display: none !important; /* Forces the warning to be hidden */
-        }
-
-        /* * Basic CSS for required elements (You should move this to style.css)
-        */
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #000;
-            color: #ff0000;
-            font-family: monospace;
-        }
-
-        #canvas {
-            display: block;
-        }
-
-        .loader-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            transition: opacity 0.5s ease;
-        }
-
-        .loader-container.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .progress-bar {
-            width: 200px;
-            height: 4px;
-            border: 1px solid #ff0000;
-            margin-top: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background-color: #ff0000;
-            width: 0;
-            transition: width 0.1s;
-        }
-
-        /* UI elements visibility for mobile/desktop */
-        .ui-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Allows clicks to pass through to the canvas */
-            z-index: 10;
-        }
-
-        /* Hide desktop-specific elements on mobile */
-        @media (max-width: 768px) {
-            .fps-counter, .controls, .cursor, .cursor-follower, .info-card {
-                display: none !important;
-            }
-            .main-title {
-                text-align: center;
-                margin-top: 20px;
-            }
-        }
-    </style>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://threejs.org/examples/js/controls/DeviceOrientationControls.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="cursor"></div>
@@ -148,6 +65,11 @@
         <p>This 3D experience is optimized for desktop browsers. Please visit on a computer for the full interactive experience.</p>
     </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/DeviceOrientationControls.js"></script>
+
+<script src="path/to/DeviceOrientationControls.js"></script> 
+<script src="cyberpunk-scene.js"></script>
     <script>
         // --- Three.js Logic ---
         let scene, camera, renderer;
@@ -344,6 +266,7 @@
         }
         
         function createEnvironment() {
+            // ... (rest of createEnvironment function remains the same)
             // Floating geometric shapes
             const shapes = [];
             
@@ -395,55 +318,6 @@
             scene.add(gridHelper);
         }
 
-        function createExplosion(position) {
-            const particleCount = 30;
-            const explosionGeometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            
-            for (let i = 0; i < particleCount * 3; i += 3) {
-                positions[i] = position.x + (Math.random() - 0.5) * 2;
-                positions[i + 1] = position.y + (Math.random() - 0.5) * 2;
-                positions[i + 2] = position.z + (Math.random() - 0.5) * 2;
-            }
-            
-            explosionGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            
-            const explosionMaterial = new THREE.PointsMaterial({
-                color: 0xff0000,
-                size: 0.5,
-                transparent: true,
-                opacity: 1,
-                blending: THREE.AdditiveBlending
-            });
-            
-            const explosion = new THREE.Points(explosionGeometry, explosionMaterial);
-            scene.add(explosion);
-            
-            // Animate explosion
-            let opacity = 1;
-            const animateExplosion = () => {
-                opacity -= 0.02;
-                explosionMaterial.opacity = opacity;
-                
-                const positions = explosion.geometry.attributes.position.array;
-                for (let i = 0; i < positions.length; i += 3) {
-                    positions[i] += (Math.random() - 0.5) * 0.5 * opacity;
-                    positions[i + 1] += (Math.random() - 0.5) * 0.5 * opacity;
-                    positions[i + 2] += (Math.random() - 0.5) * 0.5 * opacity;
-                }
-                explosion.geometry.attributes.position.needsUpdate = true;
-                
-                if (opacity > 0) {
-                    requestAnimationFrame(animateExplosion);
-                } else {
-                    explosion.geometry.dispose();
-                    explosion.material.dispose();
-                    scene.remove(explosion);
-                }
-            };
-            animateExplosion();
-        }
-
 
         // --- Animation Loop ---
         function animate() {
@@ -453,11 +327,8 @@
 
             // Update FPS (Desktop only UI element)
             if (!isMobile && frame % 30 === 0) {
-                const fpsElement = document.getElementById('fps');
-                if (fpsElement) {
-                    const fps = Math.round(1 / delta);
-                    fpsElement.textContent = `FPS: ${fps}`;
-                }
+                const fps = Math.round(1 / delta);
+                document.getElementById('fps').textContent = `FPS: ${fps}`;
             }
 
             if (isMobile) {
@@ -471,7 +342,7 @@
                 camera.rotation.y += (targetX - camera.rotation.y) * 0.05;
                 camera.rotation.x += (targetY - camera.rotation.x) * 0.05;
 
-                // Raycasting for hover effect
+                // Raycasting is heavy, so we disable it for basic mobile functionality
                 raycasterUpdate();
             }
 
@@ -537,11 +408,11 @@
             const cursor = document.querySelector('.cursor');
             const follower = document.querySelector('.cursor-follower');
             
-            if (cursor) cursor.style.left = event.clientX - 10 + 'px';
-            if (cursor) cursor.style.top = event.clientY - 10 + 'px';
+            cursor.style.left = event.clientX - 10 + 'px';
+            cursor.style.top = event.clientY - 10 + 'px';
             
-            if (follower) follower.style.left = event.clientX - 20 + 'px';
-            if (follower) follower.style.top = event.clientY - 20 + 'px';
+            follower.style.left = event.clientX - 20 + 'px';
+            follower.style.top = event.clientY - 20 + 'px';
         }
 
         function onTouchStart(event) {
@@ -549,9 +420,6 @@
             mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
         }
-
-        let initialDistance = null;
-        let initialZ = null;
 
         function onTouchMove(event) {
             // Pinch-to-zoom simulation (only 2 fingers for camera Z position)
@@ -566,44 +434,38 @@
                 const distance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
 
                 // Use a simple state to track initial distance for delta calculation
-                if (initialDistance === null) {
-                    initialDistance = distance;
-                    initialZ = camera.position.z;
+                if (!this.initialDistance) {
+                    this.initialDistance = distance;
+                    this.initialZ = camera.position.z;
                 }
 
-                const zoomDelta = distance - initialDistance;
+                const zoomDelta = distance - this.initialDistance;
                 // Adjust sensitivity and direction
-                camera.position.z = initialZ - zoomDelta * 0.05; 
+                camera.position.z = this.initialZ - zoomDelta * 0.05; 
                 camera.position.z = Math.max(10, Math.min(50, camera.position.z));
             } else {
-                initialDistance = null;
-                initialZ = null;
+                this.initialDistance = null;
+                this.initialZ = null;
             }
         }
 
         function onClick(event) {
-            // Disable click interaction on mobile unless it's explicitly on the canvas
+            // Disable click interaction on mobile unless it's explicitly part of the UI
             if (isMobile && event.target.tagName !== 'CANVAS') return;
             
-            // Determine if raycasting is needed
-            let currentIntersects;
-
-            if (isMobile) {
-                // Mobile: Re-run raycasting on tap
-                raycaster.setFromCamera(mouse, camera);
-                currentIntersects = raycaster.intersectObjects(cameras.flatMap(cam => cam.children), true);
-            } else {
-                // Desktop: Use the last raycast result (INTERSECTED)
-                raycaster.setFromCamera(mouse, camera);
-                currentIntersects = raycaster.intersectObjects(cameras.flatMap(cam => cam.children), true);
-            }
-
-            if (currentIntersects.length > 0) {
-                let objectToExplode = currentIntersects[0].object;
-                let cameraGroup = objectToExplode.parent;
-                
+            // For desktop, check for intersection
+            if (!isMobile && INTERSECTED) {
+                let cameraGroup = INTERSECTED.parent;
                 if (cameraGroup) {
                     createExplosion(cameraGroup.position);
+                }
+            } else if (isMobile) {
+                // Mobile: Simulate raycasting on tap (less frequently)
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(cameras.flatMap(cam => cam.children), true);
+                
+                if (intersects.length > 0) {
+                     createExplosion(intersects[0].object.parent.position);
                 }
             }
         }
@@ -620,14 +482,54 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function onKeyDown(event) {
-            if (event.code === 'Space') {
-                // Reset camera position
-                camera.position.set(0, 5, 30);
-                camera.rotation.set(0, 0, 0);
+        // ... (rest of helper functions remain the same)
+        function createExplosion(position) {
+            const particleCount = 30;
+            const explosionGeometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = position.x + (Math.random() - 0.5) * 2;
+                positions[i + 1] = position.y + (Math.random() - 0.5) * 2;
+                positions[i + 2] = position.z + (Math.random() - 0.5) * 2;
             }
+            
+            explosionGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const explosionMaterial = new THREE.PointsMaterial({
+                color: 0xff0000,
+                size: 0.5,
+                transparent: true,
+                opacity: 1,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const explosion = new THREE.Points(explosionGeometry, explosionMaterial);
+            scene.add(explosion);
+            
+            // Animate explosion
+            let opacity = 1;
+            const animateExplosion = () => {
+                opacity -= 0.02;
+                explosionMaterial.opacity = opacity;
+                
+                const positions = explosion.geometry.attributes.position.array;
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i] += (Math.random() - 0.5) * 0.5 * opacity;
+                    positions[i + 1] += (Math.random() - 0.5) * 0.5 * opacity;
+                    positions[i + 2] += (Math.random() - 0.5) * 0.5 * opacity;
+                }
+                explosion.geometry.attributes.position.needsUpdate = true;
+                
+                if (opacity > 0) {
+                    requestAnimationFrame(animateExplosion);
+                } else {
+                    scene.remove(explosion);
+                }
+            };
+            animateExplosion();
         }
-        
+
         function simulateLoading() {
             let progress = 0;
             const loadingInterval = setInterval(() => {
@@ -636,14 +538,12 @@
                     progress = 100;
                     clearInterval(loadingInterval);
                     setTimeout(() => {
-                        const loaderElement = document.getElementById('loader');
-                        if (loaderElement) loaderElement.classList.add('hidden');
+                        loader.classList.add('hidden');
                         animate();
                         showInfoCard();
                     }, 500);
                 }
-                const progressBarElement = document.getElementById('progress');
-                if (progressBarElement) progressBarElement.style.width = progress + '%';
+                progressBar.style.width = progress + '%';
             }, 200);
         }
 
@@ -651,25 +551,27 @@
             // Only show the info card automatically on desktop
             if (isMobile) return; 
 
-            const infoCard = document.getElementById('infoCard');
-            if (!infoCard) return;
-
             setTimeout(() => {
-                infoCard.classList.add('active');
+                document.getElementById('infoCard').classList.add('active');
             }, 1000);
             
             setTimeout(() => {
-                infoCard.classList.remove('active');
+                document.getElementById('infoCard').classList.remove('active');
             }, 5000);
         }
 
-        // Initialize
-        if (typeof THREE !== 'undefined' && document.getElementById('canvas')) {
-            init();
-        } else {
-            // Log an error if THREE.js didn't load (unlikely with CDN) or canvas is missing
-            console.error('THREE.js or Canvas not available.');
+        function onKeyDown(event) {
+            if (event.code === 'Space') {
+                // Reset camera position
+                camera.position.set(0, 5, 30);
+                camera.rotation.set(0, 0, 0);
+            }
         }
+        
+        // Menu interaction is handled by the static HTML/CSS on all pages
+        
+        // Initialize
+        init();
     </script>
 </body>
 </html>
