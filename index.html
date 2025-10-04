@@ -1,5 +1,75 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://threejs.org/examples/js/controls/DeviceOrientationControls.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Photography Universe | Capture</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <div class="loader-container" id="loader">
+        <div class="loader-text">INITIALIZING</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="ui-container">
+        <div class="nav-menu">
+            <div class="menu-btn" id="menuBtn">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </div>
+            <div class="dropdown-content">
+                <a href="index.html">3D Universe</a>
+                <a href="gallery.html">Gallery</a>
+                <a href="profile.html">Profile</a>
+            </div>
+        </div>
+
+        <div class="fps-counter" id="fps">FPS: 60</div>
+
+        <div class="main-title">
+            <h1>Razz</h1>
+            <p class="subtitle">3D Photography Experience</p>
+        </div>
+
+        <div class="info-card" id="infoCard">
+            <h2>Virtual Studio</h2>
+            <p>Welcome to an immersive 3D photography experience. Navigate through our virtual space and interact with floating cameras, dynamic lighting, and particle systems.</p>
+            <div class="tech-tags">
+                <span class="tech-tag">Three.js</span>
+                <span class="tech-tag">WebGL</span>
+                <span class="tech-tag">3D Graphics</span>
+                <span class="tech-tag">Real-time</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h3>Controls</h3>
+            <div class="control-item"><span class="control-key">MOUSE</span> Look Around</div>
+            <div class="control-item"><span class="control-key">SCROLL</span> Zoom In/Out</div>
+            <div class="control-item"><span class="control-key">CLICK</span> Interact (Explode Camera)</div>
+            <div class="control-item"><span class="control-key">SPACE</span> Reset View</div>
+        </div>
+    </div>
+
+    <div class="mobile-warning">
+        <h2>Desktop Experience Required</h2>
+        <p>This 3D experience is optimized for desktop browsers. Please visit on a computer for the full interactive experience.</p>
+    </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/DeviceOrientationControls.js"></script>
+
+<script src="path/to/DeviceOrientationControls.js"></script> 
+<script src="cyberpunk-scene.js"></script>
     <script>
         // --- Three.js Logic ---
         let scene, camera, renderer;
@@ -503,3 +573,5 @@
         // Initialize
         init();
     </script>
+</body>
+</html>
