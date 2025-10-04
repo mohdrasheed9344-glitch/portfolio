@@ -1,73 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Photography Universe | Capture</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="cursor"></div>
-    <div class="cursor-follower"></div>
-
-    <div class="loader-container" id="loader">
-        <div class="loader-text">INITIALIZING</div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress"></div>
-        </div>
-    </div>
-
-    <canvas id="canvas"></canvas>
-
-    <div class="ui-container">
-        <div class="nav-menu">
-            <div class="menu-btn" id="menuBtn">
-                <div class="menu-line"></div>
-                <div class="menu-line"></div>
-                <div class="menu-line"></div>
-            </div>
-            <div class="dropdown-content">
-                <a href="index.html">3D Universe</a>
-                <a href="gallery.html">Gallery</a>
-                <a href="profile.html">Profile</a>
-            </div>
-        </div>
-
-        <div class="fps-counter" id="fps">FPS: 60</div>
-
-        <div class="main-title">
-            <h1>Razz</h1>
-            <p class="subtitle">3D Photography Experience</p>
-        </div>
-
-        <div class="info-card" id="infoCard">
-            <h2>Virtual Studio</h2>
-            <p>Welcome to an immersive 3D photography experience. Navigate through our virtual space and interact with floating cameras, dynamic lighting, and particle systems.</p>
-            <div class="tech-tags">
-                <span class="tech-tag">Three.js</span>
-                <span class="tech-tag">WebGL</span>
-                <span class="tech-tag">3D Graphics</span>
-                <span class="tech-tag">Real-time</span>
-            </div>
-        </div>
-
-        <div class="controls">
-            <h3>Controls</h3>
-            <div class="control-item"><span class="control-key">MOUSE</span> Look Around</div>
-            <div class="control-item"><span class="control-key">SCROLL</span> Zoom In/Out</div>
-            <div class="control-item"><span class="control-key">CLICK</span> Interact (Explode Camera)</div>
-            <div class="control-item"><span class="control-key">SPACE</span> Reset View</div>
-        </div>
-    </div>
-
-    <div class="mobile-warning">
-        <h2>Desktop Experience Required</h2>
-        <p>This 3D experience is optimized for desktop browsers. Please visit on a computer for the full interactive experience.</p>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/DeviceOrientationControls.js"></script>
     <script>
-        // --- Three.js Logic (Kept mostly as is) ---
+        // --- Three.js Logic ---
         let scene, camera, renderer;
         let cameras = [];
         let particles;
@@ -78,11 +12,15 @@
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
         let INTERSECTED;
+        let controls; // For mobile/orientation controls
 
         // Loading Progress
         const progressBar = document.getElementById('progress');
         const loader = document.getElementById('loader');
-
+        
+        // Mobile detection flag
+        const isMobile = window.innerWidth <= 768;
+        
         function init() {
             // Scene
             scene = new THREE.Scene();
@@ -100,35 +38,29 @@
                 alpha: true 
             });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            // Use a lower pixel ratio on mobile for better frame rates
+            renderer.setPixelRatio(isMobile ? 1 : window.devicePixelRatio); 
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xff0000, 0.2);
+            // Lighting (Slightly reduced intensity on mobile for performance)
+            const ambientLight = new THREE.AmbientLight(0xff0000, isMobile ? 0.1 : 0.2);
             scene.add(ambientLight);
 
-            const pointLight1 = new THREE.PointLight(0xff0000, 2, 50);
+            const pointLight1 = new THREE.PointLight(0xff0000, isMobile ? 1 : 2, 50);
             pointLight1.position.set(20, 20, 20);
             pointLight1.castShadow = true;
             scene.add(pointLight1);
 
-            const pointLight2 = new THREE.PointLight(0xffffff, 1, 50);
+            const pointLight2 = new THREE.PointLight(0xffffff, isMobile ? 0.5 : 1, 50);
             pointLight2.position.set(-20, 20, -20);
             scene.add(pointLight2);
 
-            const spotLight = new THREE.SpotLight(0xff0000, 2);
-            spotLight.position.set(0, 30, 0);
-            spotLight.angle = Math.PI / 6;
-            spotLight.penumbra = 0.5;
-            spotLight.castShadow = true;
-            scene.add(spotLight);
+            // Create 3D Cameras (Fewer on mobile)
+            createCameras(isMobile ? 3 : 5); 
 
-            // Create 3D Cameras
-            createCameras();
-
-            // Create Particle System
-            createParticles();
+            // Create Particle System (Fewer particles on mobile)
+            createParticles(isMobile ? 1000 : 2000);
 
             // Create Environment
             createEnvironment();
@@ -136,10 +68,20 @@
             // Create Grid
             createGrid();
 
-            // Event Listeners
-            document.addEventListener('mousemove', onMouseMove);
+            // Setup Controls
+            if (isMobile) {
+                // Use Device Orientation Controls for mobile rotation
+                controls = new THREE.DeviceOrientationControls(camera);
+                document.addEventListener('touchstart', onTouchStart, false);
+                document.addEventListener('touchmove', onTouchMove, false);
+            } else {
+                // Use standard mouse controls for desktop
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('wheel', onWheel);
+            }
+            
+            // Shared Event Listeners
             document.addEventListener('click', onClick);
-            document.addEventListener('wheel', onWheel);
             window.addEventListener('resize', onWindowResize);
             document.addEventListener('keydown', onKeyDown);
 
@@ -147,9 +89,12 @@
             simulateLoading();
         }
 
-        function createCameras() {
+        // --- Helper functions (Updated for mobile performance) ---
+
+        function createCameras(count) {
             const cameraGeometry = new THREE.Group();
             
+            // ... (rest of createCameras function remains the same, but the loop count is now dynamic)
             // Camera body
             const bodyGeometry = new THREE.BoxGeometry(4, 3, 3);
             const bodyMaterial = new THREE.MeshPhongMaterial({ 
@@ -194,9 +139,9 @@
             const flash = new THREE.Mesh(flashGeometry, flashMaterial);
             flash.position.set(1.8, 1.8, 0);
             cameraGeometry.add(flash);
-
+            
             // Create multiple cameras
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < count; i++) {
                 const cam = cameraGeometry.clone();
                 cam.position.set(
                     (Math.random() - 0.5) * 40,
@@ -218,9 +163,9 @@
             }
         }
 
-        function createParticles() {
+        function createParticles(count) {
             const particleGeometry = new THREE.BufferGeometry();
-            const particleCount = 2000;
+            const particleCount = count;
             const positions = new Float32Array(particleCount * 3);
             const colors = new Float32Array(particleCount * 3);
 
@@ -249,8 +194,9 @@
             particles = new THREE.Points(particleGeometry, particleMaterial);
             scene.add(particles);
         }
-
+        
         function createEnvironment() {
+            // ... (rest of createEnvironment function remains the same)
             // Floating geometric shapes
             const shapes = [];
             
@@ -302,43 +248,37 @@
             scene.add(gridHelper);
         }
 
-        function simulateLoading() {
-            let progress = 0;
-            const loadingInterval = setInterval(() => {
-                progress += Math.random() * 20;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(loadingInterval);
-                    setTimeout(() => {
-                        loader.classList.add('hidden');
-                        animate();
-                        showInfoCard();
-                    }, 500);
-                }
-                progressBar.style.width = progress + '%';
-            }, 200);
-        }
 
+        // --- Animation Loop ---
         function animate() {
             requestAnimationFrame(animate);
             frame++;
             const delta = clock.getDelta();
 
-            // Update FPS
-            if (frame % 30 === 0) {
+            // Update FPS (Desktop only UI element)
+            if (!isMobile && frame % 30 === 0) {
                 const fps = Math.round(1 / delta);
                 document.getElementById('fps').textContent = `FPS: ${fps}`;
             }
 
-            // Smooth camera movement
-            targetX = mouseX * 0.001;
-            targetY = mouseY * 0.001;
-            
-            camera.rotation.y += (targetX - camera.rotation.y) * 0.05;
-            camera.rotation.x += (targetY - camera.rotation.x) * 0.05;
+            if (isMobile) {
+                // Mobile: Use device orientation controls
+                controls.update();
+            } else {
+                // Desktop: Smooth camera movement based on mouse position
+                targetX = mouseX * 0.001;
+                targetY = mouseY * 0.001;
+                
+                camera.rotation.y += (targetX - camera.rotation.y) * 0.05;
+                camera.rotation.x += (targetY - camera.rotation.x) * 0.05;
+
+                // Raycasting is heavy, so we disable it for basic mobile functionality
+                raycasterUpdate();
+            }
+
 
             // Animate cameras
-            cameras.forEach((cam, index) => {
+            cameras.forEach((cam) => {
                 cam.rotation.x += cam.userData.rotationSpeed;
                 cam.rotation.y += cam.userData.rotationSpeed * 1.3;
                 cam.position.y = cam.userData.originalY + Math.sin(frame * 0.01 * cam.userData.floatSpeed) * 2;
@@ -358,7 +298,11 @@
                 });
             }
 
-            // Raycaster for hover effects
+            renderer.render(scene, camera);
+        }
+
+        // --- Raycasting (Desktop Only) ---
+        function raycasterUpdate() {
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(cameras.flatMap(cam => cam.children), true);
 
@@ -378,11 +322,12 @@
                 }
                 INTERSECTED = null;
             }
-
-            renderer.render(scene, camera);
         }
 
+
+        // --- Event Handlers (Updated for Mobile) ---
         function onMouseMove(event) {
+            // Desktop mouse movement for look-around effect
             mouseX = event.clientX - window.innerWidth / 2;
             mouseY = event.clientY - window.innerHeight / 2;
 
@@ -400,17 +345,74 @@
             follower.style.top = event.clientY - 20 + 'px';
         }
 
-        function onClick() {
-            if (INTERSECTED) {
-                // Find the parent group (the camera)
+        function onTouchStart(event) {
+            // Simple click detection on touch start for interaction
+            mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function onTouchMove(event) {
+            // Pinch-to-zoom simulation (only 2 fingers for camera Z position)
+            if (event.touches.length === 2) {
+                // Prevent scrolling/default touch actions
+                event.preventDefault(); 
+
+                const touch1 = event.touches[0];
+                const touch2 = event.touches[1];
+                
+                // Simplified distance check for zoom
+                const distance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+
+                // Use a simple state to track initial distance for delta calculation
+                if (!this.initialDistance) {
+                    this.initialDistance = distance;
+                    this.initialZ = camera.position.z;
+                }
+
+                const zoomDelta = distance - this.initialDistance;
+                // Adjust sensitivity and direction
+                camera.position.z = this.initialZ - zoomDelta * 0.05; 
+                camera.position.z = Math.max(10, Math.min(50, camera.position.z));
+            } else {
+                this.initialDistance = null;
+                this.initialZ = null;
+            }
+        }
+
+        function onClick(event) {
+            // Disable click interaction on mobile unless it's explicitly part of the UI
+            if (isMobile && event.target.tagName !== 'CANVAS') return;
+            
+            // For desktop, check for intersection
+            if (!isMobile && INTERSECTED) {
                 let cameraGroup = INTERSECTED.parent;
                 if (cameraGroup) {
                     createExplosion(cameraGroup.position);
-                    // Optionally remove or reposition the exploded camera
+                }
+            } else if (isMobile) {
+                // Mobile: Simulate raycasting on tap (less frequently)
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(cameras.flatMap(cam => cam.children), true);
+                
+                if (intersects.length > 0) {
+                     createExplosion(intersects[0].object.parent.position);
                 }
             }
         }
 
+        function onWheel(event) {
+            // Desktop only scroll zoom
+            camera.position.z += event.deltaY * 0.01;
+            camera.position.z = Math.max(10, Math.min(50, camera.position.z));
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ... (rest of helper functions remain the same)
         function createExplosion(position) {
             const particleCount = 30;
             const explosionGeometry = new THREE.BufferGeometry();
@@ -443,7 +445,6 @@
                 
                 const positions = explosion.geometry.attributes.position.array;
                 for (let i = 0; i < positions.length; i += 3) {
-                    // Simple outward movement simulation
                     positions[i] += (Math.random() - 0.5) * 0.5 * opacity;
                     positions[i + 1] += (Math.random() - 0.5) * 0.5 * opacity;
                     positions[i + 2] += (Math.random() - 0.5) * 0.5 * opacity;
@@ -459,26 +460,27 @@
             animateExplosion();
         }
 
-        function onWheel(event) {
-            camera.position.z += event.deltaY * 0.01;
-            camera.position.z = Math.max(10, Math.min(50, camera.position.z));
-        }
-
-        function onKeyDown(event) {
-            if (event.code === 'Space') {
-                // Reset camera position
-                camera.position.set(0, 5, 30);
-                camera.rotation.set(0, 0, 0);
-            }
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        function simulateLoading() {
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 20;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        loader.classList.add('hidden');
+                        animate();
+                        showInfoCard();
+                    }, 500);
+                }
+                progressBar.style.width = progress + '%';
+            }, 200);
         }
 
         function showInfoCard() {
+            // Only show the info card automatically on desktop
+            if (isMobile) return; 
+
             setTimeout(() => {
                 document.getElementById('infoCard').classList.add('active');
             }, 1000);
@@ -488,13 +490,16 @@
             }, 5000);
         }
 
-        // Menu interaction (Only needed for the info card toggle on the main page)
-        // document.getElementById('menuBtn').addEventListener('click', () => {
-        //     document.getElementById('infoCard').classList.toggle('active');
-        // });
-
+        function onKeyDown(event) {
+            if (event.code === 'Space') {
+                // Reset camera position
+                camera.position.set(0, 5, 30);
+                camera.rotation.set(0, 0, 0);
+            }
+        }
+        
+        // Menu interaction is handled by the static HTML/CSS on all pages
+        
         // Initialize
         init();
     </script>
-</body>
-</html>
