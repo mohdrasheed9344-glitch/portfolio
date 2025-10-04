@@ -1,0 +1,532 @@
+@font-face {
+    font-family:"kingred modern" ;
+    src: url();
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'kingred modern';
+    background: #000;
+    color: #fff;
+    overflow-x: hidden;
+    cursor: none; /* Only affects desktop, mobile styles override this */
+}
+
+/* --- Canvas and Three.js Container Styles --- */
+#canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* --- Custom Cursor Styles --- */
+.cursor {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ff0000;
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s;
+    mix-blend-mode: difference;
+}
+
+.cursor-follower {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.3s;
+}
+
+/* --- Loading Screen Styles --- */
+.loader-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 1s, visibility 1s;
+}
+
+.loader-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader-text {
+    color: #ff0000;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    animation: glitch 2s infinite;
+}
+
+@keyframes glitch {
+    0%, 100% { text-shadow: 2px 2px 0 #00ffff, -2px -2px 0 #ff00ff; }
+    25% { text-shadow: -2px 2px 0 #00ffff, 2px -2px 0 #ff00ff; }
+    50% { text-shadow: 2px -2px 0 #00ffff, -2px 2px 0 #ff00ff; }
+    75% { text-shadow: -2px -2px 0 #00ffff, 2px 2px 0 #ff00ff; }
+}
+
+.progress-bar {
+    width: 300px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    border-radius: 3px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #ff6b6b);
+    width: 0%;
+    transition: width 0.3s;
+    box-shadow: 0 0 20px #ff0000;
+}
+
+/* --- UI Overlay & Global Navigation Styles --- */
+.ui-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.nav-menu {
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    pointer-events: all;
+    z-index: 101;
+}
+
+.menu-btn {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #ff0000;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.menu-btn:hover {
+    background: #ff0000;
+    transform: scale(1.1) rotate(90deg);
+}
+
+.menu-line {
+    width: 20px;
+    height: 2px;
+    background: #fff;
+    margin: 3px 0;
+    transition: all 0.3s;
+}
+
+/* --- Dropdown Menu for all pages --- */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #ff0000;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.7);
+    z-index: 1;
+    padding: 10px 0;
+    transition: opacity 0.3s;
+}
+
+.dropdown-content a {
+    color: #aaa;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    transition: color 0.3s, background 0.3s;
+    pointer-events: all;
+}
+
+.dropdown-content a:hover {
+    background-color: #ff0000;
+    color: #fff;
+}
+
+.nav-menu:hover .dropdown-content {
+    display: block;
+}
+
+/* --- Info Cards Styles --- */
+.info-card {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #ff0000;
+    padding: 30px;
+    max-width: 400px;
+    pointer-events: all;
+    transform: translateY(200%);
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(10px);
+}
+
+.info-card.active {
+    transform: translateY(0);
+}
+
+.info-card h2 {
+    color: #ff0000;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.info-card p {
+    color: #aaa;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tech-tag {
+    background: linear-gradient(45deg, #ff0000, #ff4444);
+    color: #fff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- Controls Info Styles --- */
+.controls {
+    position: fixed;
+    bottom: 40px;
+    left: 40px;
+    color: #666;
+    font-size: 0.9rem;
+    pointer-events: all;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-left: 3px solid #ff0000;
+    backdrop-filter: blur(10px);
+}
+
+.controls h3 {
+    color: #ff0000;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.control-item {
+    margin: 5px 0;
+    opacity: 0.8;
+}
+
+.control-key {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+/* --- FPS Counter Styles --- */
+.fps-counter {
+    position: fixed;
+    top: 40px;
+    right: 40px;
+    color: #ff0000;
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    pointer-events: none;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+/* --- Main Title Styles --- */
+.main-title {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    text-align: center;
+    z-index: 50;
+    opacity: 0;
+    animation: fadeInTitle 2s forwards 1s;
+}
+
+.main-title h1 {
+    font-size: 6rem;
+    color: transparent;
+    -webkit-text-stroke: 2px #ff0000;
+    text-transform: uppercase;
+    letter-spacing: 10px;
+    margin-bottom: 20px;
+    animation: strokeAnimation 3s infinite;
+}
+
+@keyframes strokeAnimation {
+    0%, 100% { -webkit-text-stroke: 2px #ff0000; }
+    50% { -webkit-text-stroke: 2px #fff; }
+}
+
+@keyframes fadeInTitle {
+    to { opacity: 1; }
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1.2rem;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+}
+
+/* --- Content Page Styling (Profile/Gallery) --- */
+.page-content {
+    z-index: 10;
+    position: relative;
+    padding: 120px 80px 40px 80px;
+    min-height: 100vh;
+    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.7);
+    animation: fadeInContent 1s forwards;
+}
+
+@keyframes fadeInContent {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
+
+.page-content h1 {
+    font-size: 4rem;
+    color: #ff0000;
+    text-transform: uppercase;
+    border-bottom: 2px solid #ff0000;
+    padding-bottom: 10px;
+    margin-bottom: 40px;
+    letter-spacing: 5px;
+}
+
+/* Profile Page Specific Styles */
+.profile-section {
+    display: flex;
+    gap: 50px;
+    align-items: flex-start;
+}
+
+.profile-photo-container {
+    width: 300px;
+    height: 400px;
+    border: 3px solid #ff0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%);
+    transition: filter 0.5s;
+}
+
+.profile-photo:hover {
+    filter: grayscale(0%);
+}
+
+.profile-info h2 {
+    color: #fff;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.profile-info p {
+    color: #aaa;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    max-width: 600px;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.stat-item {
+    background: rgba(255, 0, 0, 0.1);
+    border-left: 3px solid #ff0000;
+    padding: 15px;
+}
+
+.stat-item .value {
+    color: #ff0000;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-item .label {
+    color: #aaa;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+/* Gallery Page Specific Styles */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.gallery-item {
+    border: 1px solid #ff0000;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.gallery-item:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
+}
+
+.gallery-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: brightness(0.7);
+}
+
+.gallery-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    font-size: 1rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transform: translateY(100%);
+    transition: transform 0.3s;
+}
+
+.gallery-item:hover .gallery-overlay {
+    transform: translateY(0);
+}
+
+
+/* --- Mobile Warning and Media Queries --- */
+.mobile-warning {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #ff0000;
+    padding: 40px;
+    text-align: center;
+    z-index: 2000;
+    max-width: 90%;
+}
+
+.mobile-warning h2 {
+    color: #ff0000;
+    margin-bottom: 20px;
+}
+
+.mobile-warning p {
+    color: #aaa;
+}
+
+@media (max-width: 1024px) {
+    .profile-section {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        cursor: default;
+    }
+    
+    .cursor, .cursor-follower {
+        display: none;
+    }
+
+    .mobile-warning {
+        display: block;
+    }
+    
+    .controls, .fps-counter, .info-card {
+        display: none;
+    }
+    
+    .nav-menu {
+        top: 20px;
+        left: 20px;
+    }
+
+    .page-content {
+        padding: 80px 20px 20px 20px;
+    }
+
+    .page-content h1 {
+        font-size: 3rem;
+    }
+
+    .profile-photo-container {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+}
